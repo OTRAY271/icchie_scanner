@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>OpenCVjs</title>
+    <!--<script
+      type="text/javascript"
+      charset="UTF-8"
+      src="javascript/statistic.js"
+    ></script>!-->
+    <script
+      type="text/javascript"
+      charset="UTF-8"
+      src="components/opencvjs/opencv.js"
+    ></script>
+    <script type="text/javascript" charset="UTF-8">
+      //DMY_IMG = "javascript/dmy.jpg";
+      var iplImage = new IplImage();
+      function WhiteBlack(imgId, iplImage) {
+        var newIplImage = cvCloneImage(iplImage);
+        cvCvtColor(iplImage, newIplImage, CV_CODE.RGB2GRAY);
+        cvShowImage(imgId, newIplImage);
+      }
+    </script>
+  </head>
+
+  <body>
+    <!--<input
+      type="file"
+      id="file1"
+      onclick="cvLoadImagePre(event, 'file1')"
+      onchange="cvLoadImage(event, 'dispImage', iplImage, 800)"
+    />!-->
+    <input
+      type="file"
+      id="file1"
+      onchange="cvLoadImage(event, 'dispImage', iplImage, 800)"
+    />
+    <br />
+    <input
+      type="button"
+      value="white_black"
+      onClick="WhiteBlack('dispImage', iplImage)"
+    />
+    <hr />
+    <img id="dispImage" src="" />
+  </body>
+</html>
