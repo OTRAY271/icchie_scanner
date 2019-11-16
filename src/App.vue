@@ -2,7 +2,11 @@
   <v-app>
     <div>
       <v-app-bar class="pl-sm-12" color="indigo" dark>
-        <v-toolbar-title>いっちースキャナー</v-toolbar-title>
+        <v-toolbar-title>
+          <v-icon large color="blue lighten-5">mdi-chart-bar</v-icon>
+          <span class="mx-3 font-weight-bold">いっちースキャナー</span>
+          <span class="caption font-weight-light grey--text text--lighten-2">Icchie Scanner ver.β</span>
+        </v-toolbar-title>
       </v-app-bar>
     </div>
 
@@ -22,11 +26,35 @@
             ></v-file-input>
           </v-row>
           <v-row>
-            <v-btn class="px-12 mt-4 mx-auto" @click="generate()">作成</v-btn>
+            <v-btn
+              v-if="!processing"
+              :disabled="inputs.length === 1"
+              class="px-12 mt-4 mx-auto"
+              @click="generate()"
+            >作成</v-btn>
+            <v-progress-circular v-else class="mt-4 mx-auto" indeterminate color="primary"></v-progress-circular>
           </v-row>
         </v-col>
       </v-card-actions>
     </v-card>
+
+    <v-sheet class="mt-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
+      ロイ〇ノートにアップする数学の演習プリントを、綺麗に撮影できる！ これはそんなサービスです。
+      <br />
+      <span class="font-weight-bold">※ 現時点ではベータ版です。不具合が発生するかもしれません。機能もまだ開発中。</span>
+      <br />
+      <br />
+      <ul>
+        <li>撮影したプリントを、影を消して綺麗にする（実装済）</li>
+        <li>PDF形式で出力され、ブラウザの機能で直接ロイ〇ノートに送れる（実装済）</li>
+        <li>分かりやすいHow-to-use（実装予定）</li>
+        <li>赤ペン対応（実装予定）</li>
+        <li>バグ報告フォーム（実装予定）</li>
+        <li>自動トリミング機能（実装検討中）</li>
+      </ul>
+      <br />
+      <div align="right">製作者／OTRAY (1D)</div>
+    </v-sheet>
   </v-app>
 </template>
 
@@ -41,7 +69,8 @@ export default {
   data() {
     return {
       lastest_input_id: 0,
-      inputs: [{ id: 0, file: null }]
+      inputs: [{ id: 0, file: null }],
+      processing: false
     };
   },
   methods: {
@@ -65,9 +94,9 @@ export default {
           file: e
         });
       }
-      console.log(this.inputs);
     },
     generate() {
+      this.processing = true;
       var app = this;
       return new Promise(function(resolve) {
         let doc = new jsPDF();
@@ -108,32 +137,12 @@ export default {
           });
         }
         Promise.all(promises).then(function() {
+          app.processing = false;
           doc.save("a4.pdf");
           resolve();
         });
       });
     },
-    g() {},
-    /*ImageToBase64(img, mime_type) {
-      console.log(img);
-      // New Canvas
-      var canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      // Draw Image
-      var ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      // To Base64
-      return canvas.toDataURL(mime_type);
-    },
-    async getFileContent(file) {
-      try {
-        const content = await this.readFileAsync(file);
-        this.content = content;
-      } catch (e) {
-        console.log(e);
-      }
-    },*/
     readFileAsync(file, i) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -144,18 +153,6 @@ export default {
         reader.readAsDataURL(file);
       });
     }
-    /*readFileAsync(files) {
-      return new Promise((resolve, reject) => {
-        files.forEach(function(file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            resolve(reader.result);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      });
-    }*/
   }
 };
 </script>

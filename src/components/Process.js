@@ -114,26 +114,13 @@ function byteStringToOrientation(img) {
   }
   return orientation;
 }
-/*function cleanUp(canvas, ctx, width, height) {
-  let iplImage = window.cvGetIplImageAtCanvasElement(canvas);
-  let newIplImage1 = window.cvCloneImage(iplImage);
-  window.cvCvtColor(iplImage, newIplImage1, window.CV_CODE.RGB2GRAY);
-  let newIplImage2 = window.cvCloneImage(newIplImage1);
-  window.cvThreshold(
-    newIplImage1,
-    newIplImage2,
-    0,
-    255,
-    window.CV_THRESHOLD_TYPE.THRESH_OTSU
-  );
-  window.cvShowImageToCanvasElement(canvas, newIplImage2);
-}*/
 function noiseRejection(canvas) {
   let iplImage = window.cvGetIplImageAtCanvasElement(canvas);
   let newIplImage = window.cvCloneImage(iplImage);
   window.cvSmooth(iplImage, newIplImage, window.CV_SMOOTH_TYPE.MEDIAN, 3, 3);
   window.cvShowImageToCanvasElement(canvas, newIplImage);
 }
+//https://qiita.com/yukatayu/items/620d1159f201c99f5d64 による
 function cleanUp(data, size_, c_, mix_rate) {
   let size = size_ || 7;
   let c = c_ || 2;
