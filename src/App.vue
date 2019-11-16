@@ -22,7 +22,7 @@
             ></v-file-input>
           </v-row>
           <v-row>
-            <v-btn class="px-12 mt-4 mx-auto" @click="generate">作成</v-btn>
+            <v-btn class="px-12 mt-4 mx-auto" @click="generate()">作成</v-btn>
           </v-row>
         </v-col>
       </v-card-actions>
@@ -32,7 +32,6 @@
 
 <script>
 import jsPDF from "jspdf";
-import Exif from "./components/Exif.js";
 import Process from "./components/Process.js";
 //import Process from "./components/opencvjs/opencv.js";
 export default {
@@ -69,49 +68,52 @@ export default {
       console.log(this.inputs);
     },
     generate() {
-      /*const elFile = this.inputs[1].file;
-      const files = elFile.files;*/
-      /*var imgData = this.ImageToBase64(
-        this.readFileAsync(this.inputs[1].file),
-        "image/jpeg"
-      );*/
-      /*var imgData = this.readFileAsync(this.inputs[1].file);
-      var doc = new jsPDF();
-      console.log(imgData);
-
-      doc.addImage(imgData, "JPEG", 15, 40, 180, 160);
-      doc.save("a4.pdf");*/
-      let doc = new jsPDF();
-      let process = new Process();
-      let promises = [];
-      for (let i = 1; i < this.inputs.length - 1; i++) doc.addPage();
-      for (let i = 0; i < this.inputs.length - 1; i++) {
-        let imgData = this.readFileAsync(this.inputs[i].file, i);
-        promises[i] = imgData.then(function(data) {
-          let inputbase64data = data[0]; // 入力したいbase64データ
-          let exif = new Exif();
-          let co_promise = exif.clearOrientation(inputbase64data);
-          return co_promise.then(function(outputbase64data) {
-            // outputbase64data: 横向きが直った画像base64データ
-            // これを使って改めてcanvasを描画
-            outputbase64data = process.process(outputbase64data);
-            doc.setPage(data[1] + 1);
-            doc.addImage(
-              outputbase64data,
-              "JPEG",
-              0,
-              0,
-              doc.internal.pageSize.width,
-              doc.internal.pageSize.height
-            );
-            return co_promise;
+      var app = this;
+      return new Promise(function(resolve) {
+        let doc = new jsPDF();
+        let promises = [];
+        for (let i = 1; i < app.inputs.length - 1; i++) doc.addPage();
+        for (let i = 0; i < app.inputs.length - 1; i++) {
+          let imgData = app.readFileAsync(app.inputs[i].file, i);
+          promises[i] = imgData.then(function(data) {
+            let inputbase64data = data[0]; // 入力したいbase64データ
+            let process = new Process();
+            let co_promise = process.process(inputbase64data);
+            return co_promise.then(function(canvas) {
+              const MAX_WIDTH = doc.internal.pageSize.width; // 画像リサイズ後の横の長さの最大値
+              const MAX_HEIGHT = doc.internal.pageSize.height; // 画像リサイズ後の縦の長さの最大値
+              let width, height, ratio;
+              if (canvas.width > canvas.height) {
+                // 横長の画像は横のサイズを指定値にあわせる
+                ratio = canvas.height / canvas.width;
+                width = MAX_WIDTH;
+                height = MAX_WIDTH * ratio;
+              } else {
+                // 縦長の画像は縦のサイズを指定値にあわせる
+                ratio = canvas.width / canvas.height;
+                width = MAX_HEIGHT * ratio;
+                height = MAX_HEIGHT;
+              }
+              doc.setPage(data[1] + 1);
+              doc.addImage(
+                canvas.toDataURL("image/jpeg"),
+                "JPEG",
+                MAX_WIDTH / 2 - width / 2,
+                MAX_HEIGHT / 2 - height / 2,
+                width,
+                height
+              );
+              return co_promise;
+            });
           });
+        }
+        Promise.all(promises).then(function() {
+          doc.save("a4.pdf");
+          resolve();
         });
-      }
-      Promise.all(promises).then(function() {
-        doc.save("a4.pdf");
       });
     },
+    g() {},
     /*ImageToBase64(img, mime_type) {
       console.log(img);
       // New Canvas
