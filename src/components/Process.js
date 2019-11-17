@@ -166,10 +166,6 @@ function cleanUp(data, size_, c_, mix_rate, red_pen) {
           (src[i] * lum[0] + src[i + 1] * lum[1] + src[i + 1] * lum[2]) *
             (1 - mix_rate);
       }
-      /*data.data[i] = 0;
-      let flag = (hsv[0] <= 26 || hsv[0] >= 340) && hsv[1] > 20;
-      data.data[i + 1] = flag ? (hsv[1] * 255) / 100 : 0;
-      data.data[i + 2] = flag ? (hsv[2] * 255) / 100 : 0;*/
     }
   }
   return data;
