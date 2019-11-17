@@ -55,7 +55,7 @@
         <li>普通の写真を読み込ませると…（既知の不具合？）</li>
       </ul>
       <br />
-      <div align="right">製作者／OTRAY (1D)</div>
+      <div align="right">製作者／OTЯAY (1D)</div>
     </v-sheet>
   </v-app>
 </template>
