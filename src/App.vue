@@ -25,19 +25,55 @@
               @change="updateFileInput(data, $event)"
               ref="file"
               accept="image/*"
+              :disabled="processing"
             ></v-file-input>
+          </v-row>
+          <v-row>
+            <div class="ml-auto">
+              <v-col>
+                <v-row>
+                  <v-switch
+                    v-model="convert2pdf"
+                    label="PDFに変換"
+                    color="primary"
+                    class="mr-4 mt-0"
+                    :disabled="processing"
+                  ></v-switch>
+                  <v-switch
+                    v-model="red_pen"
+                    label="赤ペン"
+                    color="primary"
+                    class="ma-0"
+                    :disabled="processing"
+                  ></v-switch>
+                </v-row>
+              </v-col>
+            </div>
           </v-row>
           <v-row>
             <v-btn
               v-if="!processing"
               :disabled="inputs.length === 1"
-              class="px-12 mt-4 mx-auto"
-              @click="generate()"
+              :class="[ $vuetify.breakpoint.xs ? 'v-btn--block' : 'px-12 mx-auto' ]"
+              @click="generate().then(() => {if(!convert2pdf)$vuetify.goTo($refs.img_card, {duration: 300,offset: 0,easing: 'easeInOutCubic',});});"
+              x-large
             >作成</v-btn>
             <v-progress-circular v-else class="mt-4 mx-auto" indeterminate color="primary"></v-progress-circular>
           </v-row>
         </v-col>
       </v-card-actions>
+    </v-card>
+
+    <v-card v-if="imgs.length > 0 && !processing" class="mt-3 mx-sm-12" ref="img_card">
+      <v-container fluid>
+        <v-row>
+          <v-col v-for="(img, i) in imgs" :key="i" class="d-flex child-flex" cols="6">
+            <v-card flat tile class="d-flex" :aspect-ratio="img.width/img.height">
+              <img :src="img.data" class="grey lighten-2" width="100%" height="100%" />
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-card>
 
     <v-sheet class="my-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
@@ -48,9 +84,10 @@
       <br />
       <ul>
         <li>撮影したプリントを、影を消して綺麗にする（実装済）</li>
-        <li>PDF形式で出力され、ブラウザの機能で直接ロイ〇ノートに送れる（実装済）</li>
+        <li>PDF形式で出力でき、ブラウザの機能で直接ロイ〇ノートに送れる（実装済）</li>
+        <li>JPG形式でも出力できる（実装済）</li>
+        <li>赤ペン対応（実装済・試験運用中）</li>
         <li>分かりやすいHow-to-use（実装予定）</li>
-        <li>赤ペン対応（実装予定）</li>
         <li>バグ報告フォーム（実装予定）</li>
         <li>自動トリミング機能（実装検討中）</li>
         <li>スマホだと×ボタンが押せない（既知の不具合）</li>
@@ -74,7 +111,10 @@ export default {
     return {
       lastest_input_id: 0,
       inputs: [{ id: 0, file: null }],
-      processing: false
+      processing: false,
+      convert2pdf: true,
+      red_pen: false,
+      imgs: []
     };
   },
   methods: {
@@ -105,13 +145,17 @@ export default {
       return new Promise(function(resolve) {
         let doc = new jsPDF();
         let promises = [];
-        for (let i = 1; i < app.inputs.length - 1; i++) doc.addPage();
+        app.imgs = [];
+        for (let i = 1; i < app.inputs.length - 1; i++) {
+          doc.addPage();
+          app.imgs.push({});
+        }
         for (let i = 0; i < app.inputs.length - 1; i++) {
           let imgData = app.readFileAsync(app.inputs[i].file, i);
           promises[i] = imgData.then(function(data) {
             let inputbase64data = data[0]; // 入力したいbase64データ
             let process = new Process();
-            let co_promise = process.process(inputbase64data);
+            let co_promise = process.process(inputbase64data, app.red_pen);
             return co_promise.then(function(canvas) {
               const MAX_WIDTH = doc.internal.pageSize.width; // 画像リサイズ後の横の長さの最大値
               const MAX_HEIGHT = doc.internal.pageSize.height; // 画像リサイズ後の縦の長さの最大値
@@ -127,22 +171,25 @@ export default {
                 width = MAX_HEIGHT * ratio;
                 height = MAX_HEIGHT;
               }
+              let base64 = canvas.toDataURL("image/jpeg");
               doc.setPage(data[1] + 1);
               doc.addImage(
-                canvas.toDataURL("image/jpeg"),
+                base64,
                 "JPEG",
                 MAX_WIDTH / 2 - width / 2,
                 MAX_HEIGHT / 2 - height / 2,
                 width,
                 height
               );
+              if (!app.convert2pdf)
+                app.imgs.splice(data[1], 1, { data: base64, width, height });
               return co_promise;
             });
           });
         }
         Promise.all(promises).then(function() {
           app.processing = false;
-          doc.save("a4.pdf");
+          if (app.convert2pdf) doc.save("a4.pdf");
           resolve();
         });
       });
