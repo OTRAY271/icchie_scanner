@@ -3,9 +3,11 @@
     <div>
       <v-app-bar class="pl-sm-12" color="indigo" dark>
         <v-toolbar-title>
-          <v-icon large color="blue lighten-5">mdi-chart-bar</v-icon>
-          <span class="mx-3 font-weight-bold">いっちースキャナー</span>
-          <span class="caption font-weight-light grey--text text--lighten-2">Icchie Scanner ver.β</span>
+          <v-icon large color="blue lighten-5" class="mr-1">mdi-chart-bar</v-icon>
+          <span class="mx-sm-3 font-weight-bold">いっちースキャナー</span>
+          <span
+            class="mx-1 caption font-weight-light grey--text text--lighten-2"
+          >Icchie Scanner ver.β</span>
         </v-toolbar-title>
       </v-app-bar>
     </div>
@@ -38,7 +40,7 @@
       </v-card-actions>
     </v-card>
 
-    <v-sheet class="mt-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
+    <v-sheet class="my-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
       ロイ〇ノートにアップする数学の演習プリントを、綺麗に撮影できる！ これはそんなサービスです。
       <br />
       <span class="font-weight-bold">※ 現時点ではベータ版です。不具合が発生するかもしれません。機能もまだ開発中。</span>
