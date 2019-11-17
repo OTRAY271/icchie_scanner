@@ -28,16 +28,49 @@
             ></v-file-input>
           </v-row>
           <v-row>
+            <div class="ml-auto">
+              <v-col>
+                <v-row>
+                  <v-switch v-model="convert2pdf" label="PDFに変換" color="primary" class="mr-4 mt-0"></v-switch>
+                  <v-switch v-model="red_pen" label="赤ペン" color="primary" class="ma-0"></v-switch>
+                </v-row>
+              </v-col>
+            </div>
+          </v-row>
+          <v-row>
             <v-btn
               v-if="!processing"
               :disabled="inputs.length === 1"
-              class="px-12 mt-4 mx-auto"
+              :class="[ $vuetify.breakpoint.xs ? 'v-btn--block' : 'px-12 mx-auto' ]"
               @click="generate()"
+              x-large
             >作成</v-btn>
             <v-progress-circular v-else class="mt-4 mx-auto" indeterminate color="primary"></v-progress-circular>
           </v-row>
         </v-col>
       </v-card-actions>
+    </v-card>
+
+    <v-card class="mt-6 mx-sm-12">
+      <v-container fluid>
+        <v-row>
+          <v-col v-for="n in 9" :key="n" class="d-flex child-flex" cols="4">
+            <v-card flat tile class="d-flex">
+              <v-img
+                :src="`https://picsum.photos/500/300?image=${n * 5 + 10}`"
+                :lazy-src="`https://picsum.photos/10/6?image=${n * 5 + 10}`"
+                class="grey lighten-2"
+              >
+                <template v-slot:placeholder>
+                  <v-row class="fill-height ma-0" align="center" justify="center">
+                    <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                  </v-row>
+                </template>
+              </v-img>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-card>
 
     <v-sheet class="my-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
@@ -74,7 +107,9 @@ export default {
     return {
       lastest_input_id: 0,
       inputs: [{ id: 0, file: null }],
-      processing: false
+      processing: false,
+      convert2pdf: true,
+      red_pen: false
     };
   },
   methods: {
@@ -105,13 +140,14 @@ export default {
       return new Promise(function(resolve) {
         let doc = new jsPDF();
         let promises = [];
+        let imgs = [];
         for (let i = 1; i < app.inputs.length - 1; i++) doc.addPage();
         for (let i = 0; i < app.inputs.length - 1; i++) {
           let imgData = app.readFileAsync(app.inputs[i].file, i);
           promises[i] = imgData.then(function(data) {
             let inputbase64data = data[0]; // 入力したいbase64データ
             let process = new Process();
-            let co_promise = process.process(inputbase64data);
+            let co_promise = process.process(inputbase64data, app.red_pen);
             return co_promise.then(function(canvas) {
               const MAX_WIDTH = doc.internal.pageSize.width; // 画像リサイズ後の横の長さの最大値
               const MAX_HEIGHT = doc.internal.pageSize.height; // 画像リサイズ後の縦の長さの最大値
@@ -127,23 +163,39 @@ export default {
                 width = MAX_HEIGHT * ratio;
                 height = MAX_HEIGHT;
               }
+              let base64 = canvas.toDataURL("image/jpeg");
               doc.setPage(data[1] + 1);
               doc.addImage(
-                canvas.toDataURL("image/jpeg"),
+                base64,
                 "JPEG",
                 MAX_WIDTH / 2 - width / 2,
                 MAX_HEIGHT / 2 - height / 2,
                 width,
                 height
               );
+              imgs.push(base64);
               return co_promise;
             });
           });
         }
         Promise.all(promises).then(function() {
           app.processing = false;
-          doc.save("a4.pdf");
-          resolve();
+          if (app.convert2pdf) {
+            doc.save("a4.pdf");
+          } else {
+            let href = "/showImage.html?";
+            for (let i = 0; i < imgs.length; i++) {
+              href =
+                href +
+                "img" +
+                i +
+                "=" +
+                encodeURIComponent(imgs[i]) +
+                (i < imgs.length - 1 ? "&" : "");
+            }
+            location.href = href;
+            resolve();
+          }
         });
       });
     },

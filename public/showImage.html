@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>処理結果　いっちースキャナー - 演習プリントを綺麗に撮影</title>
+    <script type="text/javascript" charset="UTF-8">
+      window.onload = function() {
+        var data = location.href.split("?")[1];
+        var data2 = data.split("&");
+        for (let i = 0; i < data2.length; i++) {
+          const img = document.createElement("img");
+          img.src = decodeURIComponent(data2[i].split("=")[1]);
+          document.body.appendChild(img);
+        }
+      };
+    </script>
+  </head>
+
+  <body></body>
+</html>

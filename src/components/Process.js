@@ -1,7 +1,7 @@
 //https://qiita.com/mo49/items/a3d61d97f1883ead333bによる
 
 export default class Process {
-  process(imgDataURL) {
+  process(imgDataURL, red_pen) {
     return new Promise(function(resolve) {
       let img = new Image();
       img.onload = function() {
@@ -28,7 +28,8 @@ export default class Process {
             ctx.getImageData(0, 0, canvas.width, canvas.height),
             13,
             9,
-            mix_rate
+            mix_rate,
+            red_pen
           ),
           0,
           0
@@ -121,7 +122,7 @@ function noiseRejection(canvas) {
   window.cvShowImageToCanvasElement(canvas, newIplImage);
 }
 //https://qiita.com/yukatayu/items/620d1159f201c99f5d64 による
-function cleanUp(data, size_, c_, mix_rate) {
+function cleanUp(data, size_, c_, mix_rate, red_pen) {
   let size = size_ || 7;
   let c = c_ || 2;
   let d = parseInt((size - 1) / 2);
@@ -144,20 +145,66 @@ function cleanUp(data, size_, c_, mix_rate) {
         }
       }
       let i = (y * w + x) * 4;
-      let result;
-      if (
-        src[i] * lum[0] + src[i + 1] * lum[1] + src[i + 2] * lum[2] <
-        t / n - c
-      ) {
-        result = 0;
+      let hsv = rgb2hsv([src[i], src[i + 1], src[i + 2]]);
+      let flag = (hsv[0] <= 26 || hsv[0] >= 340) && hsv[1] > 20;
+      if (red_pen && flag) {
+        data.data[i] = src[i] * 0.8 + 255 * 0.2;
+        data.data[i + 1] = src[i + 1] * 0.8;
+        data.data[i + 2] = src[i + 2] * 0.8;
       } else {
-        result = 255;
+        let result;
+        if (
+          src[i] * lum[0] + src[i + 1] * lum[1] + src[i + 2] * lum[2] <
+          t / n - c
+        ) {
+          result = 0;
+        } else {
+          result = 255;
+        }
+        data.data[i] = data.data[i + 1] = data.data[i + 2] =
+          result * mix_rate +
+          (src[i] * lum[0] + src[i + 1] * lum[1] + src[i + 1] * lum[2]) *
+            (1 - mix_rate);
       }
-      data.data[i] = data.data[i + 1] = data.data[i + 2] =
-        result * mix_rate +
-        (src[i] * lum[0] + src[i + 1] * lum[1] + src[i + 1] * lum[2]) *
-          (1 - mix_rate);
+      /*data.data[i] = 0;
+      let flag = (hsv[0] <= 26 || hsv[0] >= 340) && hsv[1] > 20;
+      data.data[i + 1] = flag ? (hsv[1] * 255) / 100 : 0;
+      data.data[i + 2] = flag ? (hsv[2] * 255) / 100 : 0;*/
     }
   }
   return data;
+}
+function rgb2hsv(rgb) {
+  let r = rgb[0] / 255;
+  let g = rgb[1] / 255;
+  let b = rgb[2] / 255;
+
+  let max = Math.max(r, g, b);
+  let min = Math.min(r, g, b);
+  let diff = max - min;
+
+  let h = 0;
+
+  switch (min) {
+    case max:
+      h = 0;
+      break;
+
+    case r:
+      h = 60 * ((b - g) / diff) + 180;
+      break;
+
+    case g:
+      h = 60 * ((r - b) / diff) + 300;
+      break;
+
+    case b:
+      h = 60 * ((g - r) / diff) + 60;
+      break;
+  }
+
+  let s = max == 0 ? 0 : diff / max;
+  let v = max;
+
+  return [h, s * 100, v * 100];
 }
