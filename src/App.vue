@@ -25,14 +25,27 @@
               @change="updateFileInput(data, $event)"
               ref="file"
               accept="image/*"
+              :disabled="processing"
             ></v-file-input>
           </v-row>
           <v-row>
             <div class="ml-auto">
               <v-col>
                 <v-row>
-                  <v-switch v-model="convert2pdf" label="PDFに変換" color="primary" class="mr-4 mt-0"></v-switch>
-                  <v-switch v-model="red_pen" label="赤ペン" color="primary" class="ma-0"></v-switch>
+                  <v-switch
+                    v-model="convert2pdf"
+                    label="PDFに変換"
+                    color="primary"
+                    class="mr-4 mt-0"
+                    :disabled="processing"
+                  ></v-switch>
+                  <v-switch
+                    v-model="red_pen"
+                    label="赤ペン"
+                    color="primary"
+                    class="ma-0"
+                    :disabled="processing"
+                  ></v-switch>
                 </v-row>
               </v-col>
             </div>
@@ -42,7 +55,7 @@
               v-if="!processing"
               :disabled="inputs.length === 1"
               :class="[ $vuetify.breakpoint.xs ? 'v-btn--block' : 'px-12 mx-auto' ]"
-              @click="generate()"
+              @click="generate().then(() => {if(!convert2pdf)$vuetify.goTo($refs.img_card, {duration: 300,offset: 0,easing: 'easeInOutCubic',});});"
               x-large
             >作成</v-btn>
             <v-progress-circular v-else class="mt-4 mx-auto" indeterminate color="primary"></v-progress-circular>
@@ -51,22 +64,12 @@
       </v-card-actions>
     </v-card>
 
-    <v-card class="mt-6 mx-sm-12">
+    <v-card v-if="imgs.length > 0 && !processing" class="mt-3 mx-sm-12" ref="img_card">
       <v-container fluid>
         <v-row>
-          <v-col v-for="n in 9" :key="n" class="d-flex child-flex" cols="4">
-            <v-card flat tile class="d-flex">
-              <v-img
-                :src="`https://picsum.photos/500/300?image=${n * 5 + 10}`"
-                :lazy-src="`https://picsum.photos/10/6?image=${n * 5 + 10}`"
-                class="grey lighten-2"
-              >
-                <template v-slot:placeholder>
-                  <v-row class="fill-height ma-0" align="center" justify="center">
-                    <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                  </v-row>
-                </template>
-              </v-img>
+          <v-col v-for="(img, i) in imgs" :key="i" class="d-flex child-flex" cols="6">
+            <v-card flat tile class="d-flex" :aspect-ratio="img.width/img.height">
+              <img :src="img.data" class="grey lighten-2" width="100%" height="100%" />
             </v-card>
           </v-col>
         </v-row>
@@ -109,7 +112,8 @@ export default {
       inputs: [{ id: 0, file: null }],
       processing: false,
       convert2pdf: true,
-      red_pen: false
+      red_pen: false,
+      imgs: []
     };
   },
   methods: {
@@ -140,8 +144,11 @@ export default {
       return new Promise(function(resolve) {
         let doc = new jsPDF();
         let promises = [];
-        let imgs = [];
-        for (let i = 1; i < app.inputs.length - 1; i++) doc.addPage();
+        app.imgs = [];
+        for (let i = 1; i < app.inputs.length - 1; i++) {
+          doc.addPage();
+          app.imgs.push({});
+        }
         for (let i = 0; i < app.inputs.length - 1; i++) {
           let imgData = app.readFileAsync(app.inputs[i].file, i);
           promises[i] = imgData.then(function(data) {
@@ -173,29 +180,16 @@ export default {
                 width,
                 height
               );
-              imgs.push(base64);
+              if (!app.convert2pdf)
+                app.imgs.splice(data[1], 1, { data: base64, width, height });
               return co_promise;
             });
           });
         }
         Promise.all(promises).then(function() {
           app.processing = false;
-          if (app.convert2pdf) {
-            doc.save("a4.pdf");
-          } else {
-            let href = "/showImage.html?";
-            for (let i = 0; i < imgs.length; i++) {
-              href =
-                href +
-                "img" +
-                i +
-                "=" +
-                encodeURIComponent(imgs[i]) +
-                (i < imgs.length - 1 ? "&" : "");
-            }
-            location.href = href;
-            resolve();
-          }
+          if (app.convert2pdf) doc.save("a4.pdf");
+          resolve();
         });
       });
     },
