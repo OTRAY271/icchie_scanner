@@ -1,4 +1,4 @@
-//https://qiita.com/mo49/items/a3d61d97f1883ead333bによる
+//https://qiita.com/mo49/items/a3d61d97f1883ead333b による
 
 export default class Process {
   process(imgDataURL, red_pen) {
@@ -6,6 +6,7 @@ export default class Process {
       let img = new Image();
       img.onload = function() {
         let canvas = document.createElement("canvas");
+        let canvas_original = document.createElement("canvas");
         let ctx = canvas.getContext("2d");
         const MAX_WIDTH = 2048; // 画像リサイズ後の横の長さの最大値
         const MAX_HEIGHT = 2048; // 画像リサイズ後の縦の長さの最大値
@@ -22,6 +23,10 @@ export default class Process {
           height = MAX_HEIGHT;
         }
         clearOrientation(imgDataURL, img, canvas, ctx, width, height);
+        canvas_original.width = canvas.width;
+        canvas_original.height = canvas.height;
+        let image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        canvas_original.getContext("2d").putImageData(image, 0, 0);
         const mix_rate = 0.9;
         ctx.putImageData(
           cleanUp(
@@ -35,7 +40,7 @@ export default class Process {
           0
         );
         noiseRejection(canvas);
-        resolve(canvas);
+        resolve({ processed: canvas, original: canvas_original });
       };
       img.src = imgDataURL;
 

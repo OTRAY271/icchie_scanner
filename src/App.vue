@@ -80,6 +80,7 @@
       ロイ〇ノートにアップする数学の演習プリントを、綺麗に撮影できる！ これはそんなサービスです。
       <br />
       <span class="font-weight-bold">※ 現時点ではベータ版です。不具合が発生するかもしれません。機能もまだ開発中。</span>
+      <br />なお、万一のことを考え、PDFファイルの末尾に加工前の画像を付加する仕様になっております。
       <br />
       <br />
       <ul>
@@ -148,7 +149,10 @@ export default {
         app.imgs = [];
         for (let i = 1; i < app.inputs.length - 1; i++) {
           doc.addPage();
-          app.imgs.push({});
+          if (!app.convert2pdf) app.imgs.push({});
+        }
+        for (let i = 0; i < app.inputs.length - 1; i++) {
+          doc.addPage();
         }
         for (let i = 0; i < app.inputs.length - 1; i++) {
           let imgData = app.readFileAsync(app.inputs[i].file, i);
@@ -156,7 +160,9 @@ export default {
             let inputbase64data = data[0]; // 入力したいbase64データ
             let process = new Process();
             let co_promise = process.process(inputbase64data, app.red_pen);
-            return co_promise.then(function(canvas) {
+            return co_promise.then(function(canvas_array) {
+              let canvas = canvas_array.processed;
+              let canvas_original = canvas_array.original;
               const MAX_WIDTH = doc.internal.pageSize.width; // 画像リサイズ後の横の長さの最大値
               const MAX_HEIGHT = doc.internal.pageSize.height; // 画像リサイズ後の縦の長さの最大値
               let width, height, ratio;
@@ -175,6 +181,16 @@ export default {
               doc.setPage(data[1] + 1);
               doc.addImage(
                 base64,
+                "JPEG",
+                MAX_WIDTH / 2 - width / 2,
+                MAX_HEIGHT / 2 - height / 2,
+                width,
+                height
+              );
+              let base64_original = canvas_original.toDataURL("image/jpeg");
+              doc.setPage(data[1] + 1 + app.inputs.length - 1);
+              doc.addImage(
+                base64_original,
                 "JPEG",
                 MAX_WIDTH / 2 - width / 2,
                 MAX_HEIGHT / 2 - height / 2,
