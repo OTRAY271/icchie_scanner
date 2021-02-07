@@ -3,11 +3,14 @@
     <div>
       <v-app-bar class="pl-sm-12" color="indigo" dark>
         <v-toolbar-title>
-          <v-icon large color="blue lighten-5" class="mr-1">mdi-chart-bar</v-icon>
+          <v-icon large color="blue lighten-5" class="mr-1"
+            >mdi-chart-bar</v-icon
+          >
           <span class="mx-sm-3 font-weight-bold">いっちースキャナー</span>
           <span
             class="mx-1 caption font-weight-light grey--text text--lighten-2"
-          >Icchie Scanner ver.β</span>
+            >Icchie Scanner ver.β</span
+          >
         </v-toolbar-title>
       </v-app-bar>
     </div>
@@ -54,38 +57,82 @@
             <v-btn
               v-if="!processing"
               :disabled="inputs.length === 1"
-              :class="[ $vuetify.breakpoint.xs ? 'v-btn--block' : 'px-12 mx-auto' ]"
-              @click="generate().then(() => {if(!convert2pdf)$vuetify.goTo($refs.img_card, {duration: 300,offset: 0,easing: 'easeInOutCubic',});});"
+              :class="[
+                $vuetify.breakpoint.xs ? 'v-btn--block' : 'px-12 mx-auto',
+              ]"
+              @click="
+                generate().then(() => {
+                  if (!convert2pdf)
+                    $vuetify.goTo($refs.img_card, {
+                      duration: 300,
+                      offset: 0,
+                      easing: 'easeInOutCubic',
+                    });
+                })
+              "
               x-large
-            >作成</v-btn>
-            <v-progress-circular v-else class="mt-4 mx-auto" indeterminate color="primary"></v-progress-circular>
+              >作成</v-btn
+            >
+            <v-progress-circular
+              v-else
+              class="mt-4 mx-auto"
+              indeterminate
+              color="primary"
+            ></v-progress-circular>
           </v-row>
         </v-col>
       </v-card-actions>
     </v-card>
 
-    <v-card v-if="imgs.length > 0 && !processing" class="mt-3 mx-sm-12" ref="img_card">
+    <v-card
+      v-if="imgs.length > 0 && !processing"
+      class="mt-3 mx-sm-12"
+      ref="img_card"
+    >
       <v-container fluid>
         <v-row>
-          <v-col v-for="(img, i) in imgs" :key="i" class="d-flex child-flex" cols="6">
-            <v-card flat tile class="d-flex" :aspect-ratio="img.width/img.height">
-              <img :src="img.data" class="grey lighten-2" width="100%" height="100%" />
+          <v-col
+            v-for="(img, i) in imgs"
+            :key="i"
+            class="d-flex child-flex"
+            cols="6"
+          >
+            <v-card
+              flat
+              tile
+              class="d-flex"
+              :aspect-ratio="img.width / img.height"
+            >
+              <img
+                :src="img.data"
+                class="grey lighten-2"
+                width="100%"
+                height="100%"
+              />
             </v-card>
           </v-col>
         </v-row>
       </v-container>
     </v-card>
 
-    <v-sheet class="my-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2">
-      ロイ〇ノートにアップする数学の演習プリントを、綺麗に撮影できる！ これはそんなサービスです。
+    <v-sheet
+      class="my-6 mx-sm-12 px-6 grey lighten-5 grey--text text--darken-1 body-2"
+    >
+      ロイ〇ノートにアップする数学の演習プリントを、綺麗に撮影できる！
+      いっちースキャナーはそんなサービスです。
       <br />
-      <span class="font-weight-bold">※ 現時点ではベータ版です。不具合が発生するかもしれません。機能もまだ開発中。</span>
+      <span class="font-weight-bold"
+        >※
+        現時点ではベータ版です。不具合が発生するかもしれません。機能もまだ開発中。</span
+      >
       <br />なお、万一のことを考え、PDFファイルの末尾に加工前の画像を付加する仕様になっております。
       <br />
       <br />
       <ul>
         <li>撮影したプリントを、影を消して綺麗にする（実装済）</li>
-        <li>PDF形式で出力でき、ブラウザの機能で直接ロイ〇ノートに送れる（実装済）</li>
+        <li>
+          PDF形式で出力でき、ブラウザの機能で直接ロイ〇ノートに送れる（実装済）
+        </li>
         <li>JPG形式でも出力できる（実装済）</li>
         <li>赤ペン対応（実装済・試験運用中）</li>
         <li>分かりやすいHow-to-use（実装予定）</li>
@@ -95,7 +142,7 @@
         <li>普通の写真を読み込ませると…（既知の不具合？）</li>
       </ul>
       <br />
-      <div align="right">製作者／OTЯAY (1D)</div>
+      <div align="right">製作者／OTЯAY (2G)</div>
     </v-sheet>
   </v-app>
 </template>
@@ -115,13 +162,13 @@ export default {
       processing: false,
       convert2pdf: true,
       red_pen: false,
-      imgs: []
+      imgs: [],
     };
   },
   methods: {
     updateFileInput(data, e) {
       if (e === null) {
-        this.inputs = this.inputs.filter(function(item) {
+        this.inputs = this.inputs.filter(function (item) {
           return item.id !== data.id;
         });
       } else {
@@ -136,14 +183,14 @@ export default {
         }
         this.inputs.splice(index, 1, {
           id: this.inputs[index].id,
-          file: e
+          file: e,
         });
       }
     },
     generate() {
       this.processing = true;
       var app = this;
-      return new Promise(function(resolve) {
+      return new Promise(function (resolve) {
         let doc = new jsPDF();
         let promises = [];
         app.imgs = [];
@@ -156,11 +203,11 @@ export default {
         }
         for (let i = 0; i < app.inputs.length - 1; i++) {
           let imgData = app.readFileAsync(app.inputs[i].file, i);
-          promises[i] = imgData.then(function(data) {
+          promises[i] = imgData.then(function (data) {
             let inputbase64data = data[0]; // 入力したいbase64データ
             let process = new Process();
             let co_promise = process.process(inputbase64data, app.red_pen);
-            return co_promise.then(function(canvas_array) {
+            return co_promise.then(function (canvas_array) {
               let canvas = canvas_array.processed;
               let canvas_original = canvas_array.original;
               const MAX_WIDTH = doc.internal.pageSize.width; // 画像リサイズ後の横の長さの最大値
@@ -203,7 +250,7 @@ export default {
             });
           });
         }
-        Promise.all(promises).then(function() {
+        Promise.all(promises).then(function () {
           app.processing = false;
           if (app.convert2pdf) doc.save("a4.pdf");
           resolve();
@@ -219,7 +266,7 @@ export default {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-    }
-  }
+    },
+  },
 };
 </script>
